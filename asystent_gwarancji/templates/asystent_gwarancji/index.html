@@ -1,0 +1,175 @@
+{% load static %}
+{% load crispy_forms_tags %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Asystent gwarancji</title>
+        <link rel="icon" type="image/x-icon" href="{% static 'assets/favicon.ico' %}" />
+        <!-- Core theme CSS (includes Bootstrap)-->
+        <link href="{% static 'css/styles1.css' %}" rel="stylesheet" />
+
+        <style>
+        .hidden-row {
+        display: none;
+        }
+        </style>
+
+    </head>
+    <body id="page-top">
+
+        <!-- Navigation-->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
+            <div class="container px-4">
+                <a class="navbar-brand" href=".">Asystent gwarancji</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                <div class="collapse navbar-collapse" id="navbarResponsive">
+                    <ul class="navbar-nav ms-auto">
+
+                        {% if access %}
+                        <li class="nav-item"><a class="nav-link" href="#about">Lista</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#services">Dodaj</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'logout_page' %}">Wyloguj</a></li>
+                        {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'login_page' %}">Zaloguj</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <!-- Header-->
+        <header class="bg-danger bg-gradient text-white">
+            <div class="container px-4 text-center">
+                <h1 class="fw-bolder">Witaj w Asystencie Gwarancji</h1>
+                <p class="lead"> Mini apka dla tych, którzy wiedzą, że gwarancja to nie tylko papier, ale też i spokój ducha.</p>
+            </div>
+        </header>
+
+        {% if access %}
+
+        <!-- About section-->
+        <section id="about">
+            <div class="container px-4">
+                <div class="row gx-4 justify-content-center">
+                    <div class="col-lg-8">
+                        <h2>Lista wprowadzonych gwarancji</h2>
+                        <p class="lead">Poniższa tabela wyświetli wszystkie aktywne dokumenty tj. ze statusem równym 1.
+                            Jeśli pozostały czas gwarancji jest pomiędzy 0, a 14 dni - rekord podświetli się na żółto,
+                            jeśli gwarancja minęła - na czerwono. Osobno chodzi skrypt, który wysyła maile z upływem
+                            gwarancji mniejszym niż 14 dni.</p>
+                        <br>
+                        <table class="table table-hover">
+                        <thead>
+                            <tr>
+                              <th scope="col">Przedmiot</th>
+                              <th scope="col">Data zakupu</th>
+                              <th scope="col">Data gwarancji</th>
+                                <th scope="col">Zostało dni</th>
+                                <th scope="col">Foto</th>
+                            </tr>
+                        </thead>
+                         <tbody>
+
+                          {% for receipt in receipts %}
+                          {% if receipt.delta >= 14 %}
+                                <tr class="clickable-row"> {% elif receipt.delta > 0 %}
+                                     <tr class="clickable-row bg-warning bg-gradient"> {% else %}
+                                     <tr class="clickable-row bg-danger bg-gradient"> {% endif %}
+
+                                  <td class="align-middle">{{receipt.name}}</td>
+                                  <td class="align-middle">{{receipt.date_purchase}}</td>
+                                  <td class="align-middle">{{receipt.date_warranty_to}}</td>
+                                    <td class="align-middle text-center ">{{receipt.delta}}</td>
+                                    <td class="align-middle"> <a href="{% url 'display_image' receipt.id %}"><img src="{% static 'assets/icon_image.png' %}"></a></td>
+                                </tr>
+                                <tr class="hidden-row table-active">
+                                <td colspan="4">{% if receipt.description == NONE %} - {% else %} {{receipt.description}} {% endif %} </td>
+                                </tr>
+                         {% endfor %}
+
+                         </tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Services section-->
+        <section class="bg-light" id="services">
+            <div class="container px-4">
+                <div class="row gx-4 justify-content-center">
+                    <div class="col-lg-8">
+                        <h2>Dodaj gwarancję</h2>
+                        <p class="lead">Uzupełnij nazwę, datę zakupu (DD.MM.RRRR) oraz długość gwarancji liczoną w miesiącach.
+                        Data obowiązywania gwarancji wyliczy się automatycznie. Jako załącznik możesz dodać dowolny plik graficzny.</p>
+
+                        <form method="POST" enctype="multipart/form-data" class="post-form">{% csrf_token %}
+                            <div style="margin-bottom: 10px;">{{ form.name|as_crispy_field }}</div>
+                            <div style="margin-bottom: 10px;">{{ form.description|as_crispy_field }}</div>
+                            <div style="margin-bottom: 10px;">{{ form.date_purchase|as_crispy_field }}</div>
+                            <div style="margin-bottom: 10px;">{{ form.lenght_of_warranty|as_crispy_field }}</div>
+                            <div style="margin-bottom: 10px;">{{ form.image|as_crispy_field }}</div>
+
+                             <div class="text-center">
+                             <button type="submit" class="btn btn-danger btn-lg">Zapisz</button>
+                             </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {% else %}
+
+        <!-- Contact section-->
+        <section id="contact">
+            <div class="container px-4">
+                <div class="row gx-4 justify-content-center">
+                    <div class="col-lg-8">
+
+                        <h2>Brak dostępu</h2>
+                        <p class="lead">Wygląda na to, że system nie uznał Cię za godnego zaufania. Skontaktuj się
+                        z administratorerm aplikacji aby uzyskać pełen dostęp. No chyba, że jednak masz odpowiednie supermoce.
+                            Wtedy - <a href="{% url 'login_page' %}"> zaloguj się. </a></p>
+
+
+                        <img src="{% static 'assets/ag.jpg' %}" style="width:70%; display:block; margin: 0 auto;">
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {% endif %}
+
+        <!-- Footer-->
+        <footer class="py-5 bg-dark">
+            <div class="container px-4"><p class="m-0 text-center text-white">Copyright &copy; Solari 2023</p></div>
+        </footer>
+        <!-- Bootstrap core JS-->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Core theme JS-->
+        <script src="{% static 'js/scripts.js' %}"></script>
+
+        <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var rows = document.querySelectorAll('.clickable-row');
+
+        rows.forEach(function (row) {
+            row.addEventListener('click', function () {
+                // Toggle klasy 'hidden-row' na następnym wierszu
+                var nextRow = this.nextElementSibling;
+                nextRow.classList.toggle('hidden-row');
+            });
+        });
+    });
+</script>
+
+
+    </body>
+</html>
