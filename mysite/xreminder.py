@@ -3,7 +3,7 @@ import os
 import environ
 import smtplib, ssl, logging
 from email.message import EmailMessage
-from datetime import date
+import datetime
 
 # Initialise environment variables
 env = environ.Env()
@@ -12,7 +12,7 @@ environ.Env.read_env()
 # SQL statement
 sql_statement = """
 select name, description, date_warranty_to from asystent_gwarancji_receipt
-where status = 1 and date_warranty_to > '2024-01-01';
+where status = 1 and date_warranty_to BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 14 DAY);
 """
 
 
@@ -160,9 +160,18 @@ def sendmail(receipts):
 
 
 if __name__ == "__main__":
-    receipts = run_sql_statement(sql_statement)
 
-    if receipts:
-        sendmail(receipts)
+    today = datetime.date.today()
+    weekday = today.weekday()
+
+    if (weekday == 6):
+
+        receipts = run_sql_statement(sql_statement)
+
+        if receipts:
+            sendmail(receipts)
+        else:
+            print("Nic nowego")
+
     else:
-        print("Nic nowego")
+        print('Dzis nie dzialam')

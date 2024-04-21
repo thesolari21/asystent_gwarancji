@@ -12,6 +12,7 @@ from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from django.views import View
 from django.contrib.auth import authenticate, login
+from django.utils import timezone
 
 # Create your views here.
 
@@ -24,11 +25,12 @@ def receipt(request):
         else:
             access = False
 
-    receipts = Receipt.objects.filter(status=1)
+    receipts = Receipt.objects.filter(status=1).order_by('-date_purchase')
 
     for r in receipts:
-        delta = r.date_warranty_to - r.date_purchase
+        delta = r.date_warranty_to - timezone.now().date()
         r.delta = delta.days
+
 
     form = ReceiptForm()
 
